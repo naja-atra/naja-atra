@@ -104,6 +104,9 @@ class RequestBodyReader:
     async def read(self, n: int = -1) -> bytes:
         return NotImplemented
 
+    async def read_to_end(self) -> bytes:
+        return NotImplemented
+
 
 class Request:
     """Request"""

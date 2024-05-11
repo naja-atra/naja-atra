@@ -331,3 +331,8 @@ class IndexPage:
 @route(url="/header_narrowing", method="POST", headers="Content-Type^=text/")
 def header_narrowing():
     return "a^=b"
+
+@route(url="/chunked", method=["POST", "PUT"])
+async def chunked(req: Request):
+    _logger.info(f"{req.parameter}")
+    return {"code": 0, "message": "success"}

@@ -57,11 +57,13 @@ class RequestBodyReaderWrapper(RequestBodyReader):
         self._remain_length: int = content_length
         self._reader: StreamReader = reader
 
-    async def read(self, n: int = -1):
+    async def read(self, n: int = -1) -> bytes:
         data = b''
+        if not n:
+            return data
         if self._remain_length is not None and self._remain_length <= 0:
             return data
-        if not n or n < 0:
+        if n < 0:
             if self._remain_length:
                 data = await self._reader.read(self._remain_length)
             else:
@@ -76,6 +78,74 @@ class RequestBodyReaderWrapper(RequestBodyReader):
             self._remain_length -= len(data)
 
         return data
+
+    async def read_to_end(self) -> bytes:
+        return await self.read(self._remain_length)
+
+
+class RequestBodyReaderChunkedReader(RequestBodyReader):
+
+    def __init__(self, reader: StreamReader) -> None:
+        self._reader = reader
+        self._current_chunk_len: int = -1
+        self._buffer: bytes = b''
+        self._eof: bool = False
+        self._lock = asyncio.Lock()
+
+    async def _fill_buffer(self):
+        if self._eof:
+            return
+        if self._buffer:
+            return
+
+        if self._current_chunk_len > 0:
+            self._buffer = await self._reader.read(self._current_chunk_len)
+            self._current_chunk_len -= len(self._buffer)
+            return
+
+        if self._current_chunk_len == 0:
+            # Read \r\n at the end of a chunk
+            self._reader.read(2)
+
+        chunk_len = await self._reader.readline()
+        chunk_len = chunk_len.rstrip(b'\r\n')
+        self._current_chunk_len = int(chunk_len, 16)
+        _logger.debug(f"current chunk length: {self._current_chunk_len}")
+        if self._current_chunk_len == 0:
+            # Read \r\n at the end of the final chunk
+            await self._reader.read(2)
+            self._eof = True
+            return
+        if self._current_chunk_len < 0:
+            raise HttpError(400, "Invalid chunk length")
+        self._buffer = await self._reader.read(self._current_chunk_len)
+        self._current_chunk_len -= len(self._buffer)
+
+    async def _read(self, n: int = -1) -> bytes:
+        async with self._lock:
+            if not n:
+                return b''
+            await self._fill_buffer()
+            if len(self._buffer) > n:
+                data = self._buffer[:n]
+                self._buffer = self._buffer[n:]
+                return data
+            else:
+                data = self._buffer
+                self._buffer = b''
+                return data
+
+    async def read(self, n: int = -1) -> bytes:
+        if n >= 0:
+            return await self._read(n)
+        else:
+            data = b''
+            while not self._eof:
+                data += await self._read()
+            return data
+
+    async def read_to_end(self) -> bytes:
+        return await self._read(-1)
 
 
 class RequestWrapper(Request):
@@ -488,7 +558,7 @@ class HTTPControllerHandler:
         req._path = path
         req._session_fac = self.routing_conf.session_factory
         headers = {}
-        _headers_keys_in_lowers = {}
+        _headers_keys_in_lowers: Dict[str, str] = {}
         for k in self.headers.keys():
             headers[k] = self.headers[k]
             _headers_keys_in_lowers[k.lower()] = self.headers[k]
@@ -505,27 +575,32 @@ class HTTPControllerHandler:
 
         if "content-length" in _headers_keys_in_lowers.keys():
             content_length = int(_headers_keys_in_lowers["content-length"])
-
             req.reader = RequestBodyReaderWrapper(self.reader, content_length)
-
-            content_type = _headers_keys_in_lowers["content-type"]
-            if content_type.lower().startswith("application/x-www-form-urlencoded"):
-                req._body = await req.reader.read(content_length)
-                data_params = http_utils.decode_query_string(
-                    req._body.decode(DEFAULT_ENCODING))
-            elif content_type.lower().startswith("multipart/form-data"):
-                req._body = await req.reader.read(content_length)
-                data_params = self.__decode_multipart(
-                    content_type, req._body.decode("ISO-8859-1"))
-            elif content_type.lower().startswith("application/json"):
-                req._body = await req.reader.read(content_length)
-                req.json = json.loads(req._body.decode(DEFAULT_ENCODING))
-                data_params = {}
-            else:
-                data_params = {}
-            req.parameters = self.__merge(data_params, req.parameters)
+        elif _headers_keys_in_lowers.get("transfer-encoding", "").lower() == "chunked":
+            _logger.debug("chunked encoding")
+            req.reader = RequestBodyReaderChunkedReader(self.reader)
         else:
             req.reader = RequestBodyReaderWrapper(self.reader)
+
+        content_type = _headers_keys_in_lowers.get("content-type", "")
+        if content_type.lower().startswith("application/x-www-form-urlencoded"):
+            charset = http_utils.get_charset(content_type)
+            req._body = await req.reader.read_to_end()
+            body_decoded_params = http_utils.decode_query_string(
+                req._body.decode(charset))
+        elif content_type.lower().startswith("multipart/form-data"):
+            req._body = await req.reader.read_to_end()
+            body_decoded_params = self.__decode_multipart(
+                content_type, req._body.decode("ISO-8859-1"))
+        elif content_type.lower().startswith("application/json"):
+            charset = http_utils.get_charset(content_type)
+            req._body = await req.reader.read_to_end()
+            req.json = json.loads(req._body.decode(charset))
+            body_decoded_params = {}
+        else:
+            body_decoded_params = {}
+        req.parameters = self.__merge(body_decoded_params, req.parameters)
+
         return req
 
     def __merge(self, dic0: Dict[str, List[str]], dic1: Dict[str, List[str]]):

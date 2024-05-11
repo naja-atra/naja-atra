@@ -70,7 +70,8 @@ def get_function_kwargs(func, default_type=str):
     if argspec.defaults is None:
         return []
 
-    kwargs = OrderedDict(zip(argspec.args[-len(argspec.defaults):], argspec.defaults))
+    kwargs = OrderedDict(
+        zip(argspec.args[-len(argspec.defaults):], argspec.defaults))
     kwarg_turples = []
     for k, v in kwargs.items():
         if k in argspec.annotations:
@@ -110,6 +111,15 @@ def decode_query_string(query_string: str):
     return params
 
 
+def get_charset(s: str) -> str:
+    pattern = re.compile(r"charset=([^;]+)")
+    m = pattern.search(s)
+    if m is not None:
+        return m.group(1)
+    else:
+        return DEFAULT_ENCODING
+
+
 def date_time_string(timestamp=None):
     if timestamp is None:
         timestamp = time.time()
@@ -135,7 +145,8 @@ def decode_response_body(raw_body: Any) -> Tuple[str, Union[str,  bytes, StaticF
             content_type = "text/plain; charset=utf8"
     elif isinstance(raw_body, StaticFile):
         if not os.path.isfile(raw_body.file_path):
-            _logger.error(f"Cannot find file[{raw_body.file_path}] specified in StaticFile body.")
+            _logger.error(
+                f"Cannot find file[{raw_body.file_path}] specified in StaticFile body.")
             raise HttpError(404, explain="Cannot find file for this url.")
         else:
             body = raw_body
@@ -163,28 +174,33 @@ def decode_response_body_to_bytes(raw_body: Any) -> Tuple[str, bytes]:
         raise HttpError(400, explain="Cannot read body into bytes!")
     return content_type, byte_body
 
+
 def get_path_reg_pattern(url):
     _url: str = url
     path_names = re.findall("(?u)\\{\\w+\\}", _url)
     if len(path_names) == 0:
         if _url.startswith("**"):
-            _url = _url[2: ]
-            assert _url.find("*") < 0, "You can only config a * or ** at the start or end of a path."
+            _url = _url[2:]
+            assert _url.find(
+                "*") < 0, "You can only config a * or ** at the start or end of a path."
             _url = f'^([\\w%.\\-@!\\(\\)\\[\\]\\|\\$/]+){_url}$'
             return _url, [quote("__path_wildcard")]
         elif _url.startswith("*"):
-            _url = _url[1: ]
-            assert _url.find("*") < 0, "You can only config a * or ** at the start or end of a path."
+            _url = _url[1:]
+            assert _url.find(
+                "*") < 0, "You can only config a * or ** at the start or end of a path."
             _url = f'^([\\w%.\\-@!\\(\\)\\[\\]\\|\\$]+){_url}$'
             return _url, [quote("__path_wildcard")]
         elif _url.endswith("**"):
             _url = _url[0: -2]
-            assert _url.find("*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find(
+                "*") < 0, "You can only config a * or ** at the start or end of a path."
             _url = f'^{_url}([\\w%.\\-@!\\(\\)\\[\\]\\|\\$/]+)$'
             return _url, [quote("__path_wildcard")]
         elif _url.endswith("*"):
             _url = _url[0: -1]
-            assert _url.find("*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find(
+                "*") < 0, "You can only config a * or ** at the start or end of a path."
             _url = f'^{_url}([\\w%.\\-@!\\(\\)\\[\\]\\|\\$]+)$'
             return _url, [quote("__path_wildcard")]
         else:
