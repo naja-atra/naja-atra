@@ -50,37 +50,50 @@ from ..utils.http_utils import get_function_args, get_function_kwargs
 _logger = get_logger("naja_atra.request_handlers.http_request_handler")
 
 
+class RequestBodyReaderDumpWrapper(RequestBodyReader):
+
+    def __init__(self, reader: StreamReader) -> None:
+        self._reader = reader
+
+    async def read(self, n: int = -1) -> bytes:
+        _logger.warning(
+            "`Content-Length` and `Transfer-Encoding` are both not set in request, so we can't read the body.")
+        return b''
+
+    async def read_to_end(self) -> bytes:
+        _logger.warning(
+            "`Content-Length` and `Transfer-Encoding` are both not set in request, so we can't read the body.")
+        raise b''
+
+
 class RequestBodyReaderWrapper(RequestBodyReader):
 
-    def __init__(self, reader: StreamReader, content_length: int = None) -> None:
+    def __init__(self, reader: StreamReader, content_length: int) -> None:
+        if content_length is None or content_length < 0:
+            raise HttpError(400, "Invalid content length")
         self._content_length: int = content_length
         self._remain_length: int = content_length
         self._reader: StreamReader = reader
+        self._lock = asyncio.Lock()
 
     async def read(self, n: int = -1) -> bytes:
-        data = b''
-        if not n:
-            return data
-        if self._remain_length is not None and self._remain_length <= 0:
-            return data
-        if n < 0:
-            if self._remain_length:
+        async with self._lock:
+            if not n or self._remain_length <= 0:
+                return b''
+            if n < 0:
                 data = await self._reader.read(self._remain_length)
             else:
-                data = await self._reader.read()
-        else:
-            if self._remain_length and n > self._remain_length:
-                data = await self._reader.read(self._remain_length)
-            else:
-                data = await self._reader.read(n)
+                data = await self._reader.read(min(n, self._remain_length))
 
-        if self._remain_length and self._remain_length > 0:
             self._remain_length -= len(data)
 
-        return data
+            return data
 
     async def read_to_end(self) -> bytes:
-        return await self.read(self._remain_length)
+        data = b''
+        while self._remain_length > 0:
+            data += await self.read()
+        return data
 
 
 class RequestBodyReaderChunkedReader(RequestBodyReader):
@@ -94,8 +107,11 @@ class RequestBodyReaderChunkedReader(RequestBodyReader):
 
     async def _fill_buffer(self):
         if self._eof:
+            _logger.warning("The body or this request has been all read. ")
             return
         if self._buffer:
+            _logger.debug(
+                f"There is still data in buffer. length: {len(self._buffer)}")
             return
 
         if self._current_chunk_len > 0:
@@ -105,7 +121,9 @@ class RequestBodyReaderChunkedReader(RequestBodyReader):
 
         if self._current_chunk_len == 0:
             # Read \r\n at the end of a chunk
-            self._reader.read(2)
+            rn = await self._reader.read(2)
+            if rn != b'\r\n':
+                raise HttpError(400, f"Invalid chunk end: {rn}")
 
         chunk_len = await self._reader.readline()
         chunk_len = chunk_len.rstrip(b'\r\n')
@@ -113,7 +131,9 @@ class RequestBodyReaderChunkedReader(RequestBodyReader):
         _logger.debug(f"current chunk length: {self._current_chunk_len}")
         if self._current_chunk_len == 0:
             # Read \r\n at the end of the final chunk
-            await self._reader.read(2)
+            rn = await self._reader.read(2)
+            if rn != b'\r\n':
+                raise HttpError(400, f"Invalid chunk end: {rn}")
             self._eof = True
             return
         if self._current_chunk_len < 0:
@@ -121,31 +141,25 @@ class RequestBodyReaderChunkedReader(RequestBodyReader):
         self._buffer = await self._reader.read(self._current_chunk_len)
         self._current_chunk_len -= len(self._buffer)
 
-    async def _read(self, n: int = -1) -> bytes:
+    async def read(self, n: int = -1) -> bytes:
         async with self._lock:
             if not n:
                 return b''
             await self._fill_buffer()
-            if len(self._buffer) > n:
-                data = self._buffer[:n]
-                self._buffer = self._buffer[n:]
-                return data
-            else:
+            if n < 0 or n >= len(self._buffer):
                 data = self._buffer
                 self._buffer = b''
                 return data
-
-    async def read(self, n: int = -1) -> bytes:
-        if n >= 0:
-            return await self._read(n)
-        else:
-            data = b''
-            while not self._eof:
-                data += await self._read()
-            return data
+            else:
+                data = self._buffer[:n]
+                self._buffer = self._buffer[n:]
+                return data
 
     async def read_to_end(self) -> bytes:
-        return await self._read(-1)
+        data = b''
+        while not self._eof:
+            data += await self.read()
+        return data
 
 
 class RequestWrapper(Request):
@@ -580,7 +594,7 @@ class HTTPControllerHandler:
             _logger.debug("chunked encoding")
             req.reader = RequestBodyReaderChunkedReader(self.reader)
         else:
-            req.reader = RequestBodyReaderWrapper(self.reader)
+            req.reader = RequestBodyReaderDumpWrapper(self.reader)
 
         content_type = _headers_keys_in_lowers.get("content-type", "")
         if content_type.lower().startswith("application/x-www-form-urlencoded"):

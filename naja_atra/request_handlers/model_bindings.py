@@ -217,8 +217,7 @@ class RegGroupModelBinding(ModelBinding):
 
     def __build_reg_group(self, val: RegGroup = RegGroup(group=0)):
         if val.group >= len(self.request.reg_groups):
-            raise HttpError(
-                400, None, f"RegGroup required an element at {val.group}, but the reg length is only {len(self.request.reg_groups)}")
+            raise HttpError(400, None, f"RegGroup required an element at {val.group}, but the reg length is only {len(self.request.reg_groups)}")
         return RegGroup(group=val.group, _value=self.request.reg_groups[val.group])
 
 
@@ -230,8 +229,7 @@ class JSONBodyModelBinding(ModelBinding):
     def __build_json_body(self):
         if "content-type" not in self.request._headers_keys_in_lowcase.keys() or \
                 not self.request._headers_keys_in_lowcase["content-type"].lower().startswith("application/json"):
-            raise HttpError(
-                400, None, 'The content type of this request must be "application/json"')
+            raise HttpError(400, None, 'The content type of this request must be "application/json"')
         return JSONBody(self.request.json)
 
 
@@ -245,7 +243,7 @@ class BytesBodyModelBinding(ModelBinding):
 
     async def bind(self) -> Any:
         if not self.request._body:
-            self.request._body = await self.request.reader.read()
+            self.request._body = await self.request.reader.read_to_end()
         return BytesBody(self.request._body)
 
 

@@ -433,7 +433,7 @@ class HttpRequestHandler:
             return
 
 
-class SocketServerStreamRequestHandlerWraper(socketserver.StreamRequestHandler, RequestBodyReader):
+class SocketServerStreamRequestHandlerWraper(socketserver.StreamRequestHandler):
 
     server_version = HttpRequestHandler.server_version
 

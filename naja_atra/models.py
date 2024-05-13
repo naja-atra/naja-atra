@@ -104,6 +104,7 @@ class RequestBodyReader:
     async def read(self, n: int = -1) -> bytes:
         return NotImplemented
 
+    @abstractmethod
     async def read_to_end(self) -> bytes:
         return NotImplemented
 

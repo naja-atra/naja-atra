@@ -3,6 +3,7 @@
 from gzip import GzipFile
 import os
 import json
+import socket
 import websocket
 import unittest
 import urllib.request
@@ -246,6 +247,37 @@ class ThreadingServerTest(unittest.TestCase):
         assert res["name"] == name
         assert res["sex"] == sex
         assert res["age"] == age
+
+    def test_send_chunked(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect(("127.0.0.1", self.PORT))
+            request = (
+                "POST {} HTTP/1.1\r\n"
+                "Host: {}\r\n"
+                "Transfer-Encoding: chunked\r\n"
+                "Content-Type: text/plain\r\n"
+                "\r\n"
+                "8\r\n"
+                "Mozilla \r\n"
+                "11\r\n"
+                "Developer Network\r\n"
+                "0\r\n"
+                "\r\n"
+            ).format(f"/chunked", f"127.0.0.1:{self.PORT}")
+
+            sock.sendall(request.encode('utf-8'))
+            response = b''
+            while True:
+                data = sock.recv(4096)
+                if not data:
+                    break
+                response += data
+            response = response.split(b'\r\n')[-1].strip()
+            res = json.loads(response)
+            assert res["data"] == "Mozilla Developer Network"
+        finally:
+            sock.close()
 
 
 class CoroutineServerTest(ThreadingServerTest):
