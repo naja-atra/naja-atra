@@ -1,10 +1,14 @@
-# python-simple-http-server
+# Naja-Atra（饭铲头）
 
-[![PyPI version](https://badge.fury.io/py/simple-http-server.png)](https://badge.fury.io/py/simple-http-server)
+[![PyPI version](https://badge.fury.io/py/naja-atra.png)](https://badge.fury.io/py/naja-atra)
 
-## 简介
+Naja-Atra（饭铲头）是一个轻量级的 HTTP 服务器，该服务器不依赖 WSGI/ASGI 标准，因此能较为灵活地支持一些 HTTP 标准。例如 websocket，本服务器能支持非常细的 websocket 协议，例如发送、接收帧，这些在其他的服务器中均无法支持。
 
-这是一个轻量级编写的 HTTP 服务器，源生支持 websocket，你可以非常容易的搭建一个 Restful API。其中一些请求的转发等参考了 SpringMVC 的设计。
+并且，通过一个配置，你就能选择，将服务器使用线程或者是协程的方式运行。与其他 WSGI 服务器不同，当本服务器运行在协程模式下时，你所编写的所有服务器代码会直接运行在一个线程上。而且，在切换运行模式时，你无需改动任何业务代码，仅需要修改一个配置项即可。
+
+当然，如果你希望在 ASGI 或者 WSGI 的服务器上使用本模块，也可以通过指定的插件来使用。
+
+本工程由 [python-simple-http-server](https://github.com/keijack/python-simple-http-server) 重命名而来，如你原先使用过 python-simple-http-server，除更改模块名后，无需修改任何业务代码。
 
 ## 支持的 Python 的版本
 
@@ -13,18 +17,17 @@ Python 3.7+
 ## 为什么要选择这个项目？
 
 * 轻量级
+* 简单易用。
 * 函数化编程
-* 支持 Session 会话，并且可以通过[这个扩展](https://gitee.com/keijack/python-simple-http-server-redis-session)支持分布式会话。
-* 可以通过[这个扩展](https://gitee.com/keijack/python-simple-http-server-jinja) 来使用 `jinja` 视图层功能。
-* 支持过滤器链
-* Spring MVC 风格的请求映射配置
-* 简单易用
-* 支持 SSL
-* 支持 Gzip 压缩
-* 支持 websocket
-* 编写风格自由
-* 可嵌入到 WSGI 标准的服务器当中
-* 可嵌入到 ASGI 标准的服务器当中，本框架完全支持 ASGI 的 HTTP 与 Websocket 事件。
+* 支持 Session 会话，并且可以通过[这个扩展](https://github.com/naja-atra/naja-atra-redis-session)支持分布式会话。
+* 可以通过[这个扩展](https://github.com/naja-atra/naja-atra-jinja) 来使用 `jinja` 视图层功能。
+* 支持过滤器链。
+* 支持 SSL 加密。
+* 支持 Gzip 压缩返回。
+* 非常完善的 websocket 支持。
+* 编写风格自由。
+* 可以通过[这个扩展](https://github.com/naja-atra/naja-atra-wsgi)将你的代码嵌入到 WSGI 标准的服务器当中。
+* 可以通过[这个扩展](https://github.com/naja-atra/naja-atra-asgi)将你的代码嵌入到 ASGI 标准的服务器当中，本框架完全支持 ASGI 的 HTTP 与 Websocket 事件。
 * 支持协程模式，该模式下，你的所有控制器均运行在一个线程当中。
 
 ## 依赖
@@ -38,7 +41,7 @@ python3 -m pip install websocket-client
 ## 安装
 
 ```shell
-python3 -m pip install simple_http_server
+python3 -m pip install naja_atra
 ```
 
 ## 编写控制器
@@ -54,7 +57,7 @@ python3 -m pip install simple_http_server
 请注意，其中 `request_map` 还有另外一个别称 `route`，你可以选择熟悉的标注使用。
 
 ```Python
-from simple_http_server import request_map
+from naja_atra import request_map
 
 @request_map("/index")
 def your_ctroller_function():
@@ -112,8 +115,8 @@ async def coroutine_ctrl(hey: str = "Hey!"):
 参考了 Spring MVC 的设计，获取请求方法的方式非常自由。其中最基本的方法是取得 Request 对象，该对象中包含了所有其他方式能够获取的内容。
 
 ```Python
-from simple_http_server import request_map
-from simple_http_server import Request
+from naja_atra import request_map
+from naja_atra import Request
 
 @request_map("/say_hello/to/{name}", method=["GET", "POST", "PUT"])
 def your_ctroller_function(req=Request()):
@@ -175,7 +178,7 @@ def your_ctroller_function(model=ModelDict(), name=PathValue()):
 我们还可以通过更直接的参数和关键字参数来获取请求中的信息，使得编码更加简洁和方便。
 
 ```python
-from simple_http_server import request_map
+from naja_atra import request_map
 
 @request_map("/say_hello/to/{name}", method=["GET", "POST", "PUT"])
 def your_ctroller_function(
@@ -193,15 +196,15 @@ def your_ctroller_function(
 以上的是基础类型的获取，实施上，我们还提供了几个类，通过这些类，你还能快速地获取一些在请求头中，Cookies 中，请求体，路径中的信息。以下是一些代码实例：
 
 ```python
-from simple_http_server import request_map
-from simple_http_server import Parameter
-from simple_http_server import Parameters
-from simple_http_server import Headers
-from simple_http_server import Header
-from simple_http_server import Cookies
-from simple_http_server import Cookie
-from simple_http_server import PathValue
-from simple_http_server import Session
+from naja_atra import request_map
+from naja_atra import Parameter
+from naja_atra import Parameters
+from naja_atra import Headers
+from naja_atra import Header
+from naja_atra import Cookies
+from naja_atra import Cookie
+from naja_atra import PathValue
+from naja_atra import Session
 
 
 @request_map("/say_hello/to/{name}", method=["GET", "POST", "PUT"])
@@ -223,8 +226,8 @@ def your_ctroller_function(
 从上述的例子我们看出，这些类中的参数均有默认值，即使不传入，也能返回正确的数据。除了上述的这些例子之外，我们还有一些额外的情况。例如请求的 Content-Type 是 application/json，然后我们将 JSON 字符串直接写入请求体中，我们可以这样获取信息：
 
 ```python
-from simple_http_server import request_map
-from simple_http_server import JSONBody
+from naja_atra import request_map
+from naja_atra import JSONBody
 
 @request_map("/from_json_bldy", method=["post", "put", "delete"])
 def your_json_body_controller_function(data=JSONBody()):
@@ -237,8 +240,8 @@ def your_json_body_controller_function(data=JSONBody()):
 我们也支持使用 multipart/form-data 上传文件，你可以这样获取文件：
 
 ```python
-from simple_http_server import request_map
-from simple_http_server import MultipartFile
+from naja_atra import request_map
+from naja_atra import MultipartFile
 
 @request_map("/upload", method="POST")
 def upload(
@@ -282,9 +285,9 @@ def your_ctroller_function(
 
 ```python
 from typing import Any
-from simple_http_server.models.model_bindings import ModelBinding
-from simple_http_server import model_binding
-from simple_http_server import HttpError, route
+from naja_atra.models.model_bindings import ModelBinding
+from naja_atra import model_binding
+from naja_atra import HttpError, route
 
 class Person:
 
@@ -319,9 +322,9 @@ def test_model_binding(person: Person):
 当然，你也可以使用 `@default_model_binding` 来指定默认的数据绑定逻辑，配置了该项后，所有未在内置或者是上述配置中找到的数据，均会使用该类来处理。
 
 ```python
-from simple_http_server.models.model_bindings import ModelBinding
-from simple_http_server import default_model_binding
-from simple_http_server import HttpError, route
+from naja_atra.models.model_bindings import ModelBinding
+from naja_atra import default_model_binding
+from naja_atra import HttpError, route
 
 class Dog:
 
@@ -520,10 +523,10 @@ class MyController:
 
 ### Session
 
-默认情况下，Session 中的数据会存储到本地，如果你需要做分布式 Session，例如将 Session内容存储在 Redis 或者 Memcache，你可以自定义自己的 `Session` 和 `SessionFactory`，然后创建一个你定义的 SessionFactory 对象通过 `simple_http_server.set_session_factory` 设置到框架中。
+默认情况下，Session 中的数据会存储到本地，如果你需要做分布式 Session，例如将 Session内容存储在 Redis 或者 Memcache，你可以自定义自己的 `Session` 和 `SessionFactory`，然后创建一个你定义的 SessionFactory 对象通过 `naja_atra.set_session_factory` 设置到框架中。
 
 ```python
-from simple_http_server import Session, SessionFactory, set_session_factory
+from naja_atra import Session, SessionFactory, set_session_factory
 
 class MySessionImpl(Session):
 
@@ -606,7 +609,7 @@ set_session_factory(MySessionFacImpl())
 ```python
     ##
     # 响应为 HTTP 错误，可以在任何适合抛出一个 HttpError 异常
-    from simple_http_server import HttpError
+    from naja_atra import HttpError
     raise HttpError(404, "page not found")
 ```
 
@@ -619,21 +622,21 @@ set_session_factory(MySessionFacImpl())
 ```python
     ##
     # 返回 Redirect 对象
-    from simple_http_server import Redirect
+    from naja_atra import Redirect
     return Redirect("/redirect/to/this/path")
 ```
 
 ```python
     ##
     # 你可以返回一个 StaticFile 类，返回一个文件，这个可以编写下载用的控制器方法
-    from simple_http_server import StaticFile
+    from naja_atra import StaticFile
     return StaticFile("/path/to/file.xml", content_type="text/xml")
 ```
 
 ```python
     ##
     # 还可以返回一个 Response 对象，这个对象可以设置更多的信息
-    from simple_http_server import Response
+    from naja_atra import Response
     from http.cookies import SimpleCookie
     res = Response(status_code=200)
     res.headers["Content-Type"] = "text/html"
@@ -649,8 +652,8 @@ set_session_factory(MySessionFacImpl())
 ```python
     ##
     # 我们还有一个更为简便的方式，就是直接返回一个元祖(tuple)
-    from simple_http_server import Headers
-    from simple_http_server import Cookies
+    from naja_atra import Headers
+    from naja_atra import Cookies
     res_cookies = Cookies()
     res_cookie["userInfo"] = "ABC"
     res_cookie["userInfo"]["path"] = "/"
@@ -658,7 +661,7 @@ set_session_factory(MySessionFacImpl())
     # 该元祖中，这些参数的顺序其实并无关系，
     # 第一个返回的 int 元素会将作为请求的状态码
     # 但是元组中所有 Headers 对象均将会被写入到响应头中
-    # 同样，元祖中所有 http.cookies.BaseCookies 以及其子类，含 http.cookie.SimpleCookie 以及 simple_http_server.Cookies 均会被写入响应的 cookies 中
+    # 同样，元祖中所有 http.cookies.BaseCookies 以及其子类，含 http.cookie.SimpleCookie 以及 naja_atra.Cookies 均会被写入响应的 cookies 中
     # 而元祖中第一个出现的类型在 (str, unicode, dict, StaticFile, bytes) 会被作为响应的数据。
     # 其他不符合条件的元素将被忽略
     return 200, Headers({"userToken": "user_id_token_xxx"}), res_cookie, {"success": True, "message": "success!"}, "这个字符串会被忽略"
@@ -675,8 +678,8 @@ set_session_factory(MySessionFacImpl())
 上述的例子中描述的通过返回信息来进行响应，你也可以通过 Response 参数来响应
 
 ```python
-from simple_http_server import request_map
-from simple_http_server import Response
+from naja_atra import request_map
+from naja_atra import Response
 
 @request_map("/say_hello")
 def say_hello(res=Response()):
@@ -704,12 +707,12 @@ def res_writer(response: Response):
 ### Websocket
 
 
-由于 Websocket 有多种事件，使用函数作为配置很多情况下反而不够直观。建议你使用类来处理 websocket 连接而非函数。并且你需要使用 `@websocket_handler` 来标识你的处理类。在你的处理类中，你需要按照制定的格式来定义处理 websocket 各事件的方法。最简单的方式是继承 `simple_http_server.WebsocketHandler` 类，实现其中你需要的事件方法（该继承并不是必需的）。
+由于 Websocket 有多种事件，使用函数作为配置很多情况下反而不够直观。建议你使用类来处理 websocket 连接而非函数。并且你需要使用 `@websocket_handler` 来标识你的处理类。在你的处理类中，你需要按照制定的格式来定义处理 websocket 各事件的方法。最简单的方式是继承 `naja_atra.WebsocketHandler` 类，实现其中你需要的事件方法（该继承并不是必需的）。
 
 你可以通过指定 `endpoint` 或者 `regexp` 来匹配需要处理的 url。另外，该装饰器还有一个 `singleton` 的配置，该配置默认为 `True`，所有的请求都会使用一个对象来处理。当你将这个字段设置为 `False` 后，系统将会为每个 `WebsocketSession` 创建一个独立的对象来处理请求。
 
 ```python
-from simple_http_server import WebsocketHandler, WebsocketRequest,WebsocketSession, websocket_handler
+from naja_atra import WebsocketHandler, WebsocketRequest,WebsocketSession, websocket_handler
 
 @websocket_handler(endpoint="/ws/{path_val}")
 class WSHandler(WebsocketHandler):
@@ -772,7 +775,7 @@ class WSHandler(WebsocketHandler):
 
 ```python
 
-from simple_http_server import WebsocketCloseReason, WebsocketHandler, WebsocketRequest, WebsocketSession, websocket_message, websocket_handshake, websocket_open, websocket_close, WEBSOCKET_MESSAGE_TEXT
+from naja_atra import WebsocketCloseReason, WebsocketHandler, WebsocketRequest, WebsocketSession, websocket_message, websocket_handshake, websocket_open, websocket_close, WEBSOCKET_MESSAGE_TEXT
 
 @websocket_handshake(endpoint="/ws-fun/{path_val}")
 def ws_handshake(request: WebsocketRequest):
@@ -804,7 +807,7 @@ async def ws_text(session: WebsocketSession, message: str):
 你可以通过 `@error_message` 来设定错误时返回特定的错误信息。
 
 ```python
-from simple_http_server import error_message
+from naja_atra import error_message
 # 具体的错误码
 @error_message("403", "404")
 def my_40x_page(message: str, explain=""):
@@ -836,7 +839,7 @@ def my_error_message(code, message, explain=""):
 参考 Java 的设计，我们增加了过滤器链式的设计，这个给了你一定的面向切面编码的能力，虽然比较弱，但是做一些权限验证，日志记录等也是够用的。
 
 ```python
-from simple_http_server import request_filter
+from naja_atra import request_filter
 
 
 @request_filter("/tuple/**") # 使用通配符，** 可包含 /，* 不包含，上述配置
@@ -860,7 +863,7 @@ def filter_tuple(ctx):
 
 ```python
 
-import simple_http_server.server as server
+import naja_atra.server as server
 # 如果你的控制器代码（处理请求的函数）放在别的文件中，那么在你的 main.py 中，你必须将他都 import 进来。
 import my_test_ctrl
 
@@ -957,11 +960,11 @@ server.start(host="",
 默认情况下，日志会输出到控制台，你创建自己的 Logging Handler 来将日志输出到别处，例如一个滚动文件中：
 
 ```python
-import simple_http_server.logger as logger
+import naja_atra.logger as logger
 import logging
 
 _formatter = logging.Formatter(fmt='[%(asctime)s]-[%(name)s]-%(levelname)-4s: %(message)s')
-_handler = logging.TimedRotatingFileHandler("/var/log/simple_http_server.log", when="midnight", backupCount=7)
+_handler = logging.TimedRotatingFileHandler("/var/log/naja_atra.log", when="midnight", backupCount=7)
 _handler.setFormatter(_formatter)
 _handler.setLevel("INFO")
 
@@ -985,7 +988,7 @@ logger.set_level("DEBUG")
 你可以通过 `logger.LoggerFactory` 来取得新的 logger，这个 logger 将与框架默认的区分开来，通过这个方法，你可以分开控制框架和业务的日志级别。
 
 ```python
-import simple_http_server.logger as logger
+import naja_atra.logger as logger
 
 log = logger.get_logger("my_service", "my_log_fac")
 
@@ -996,70 +999,6 @@ log_fac.log_level = "DEBUG"
 log = log_fac.get_logger("my_service")
 
 log.info(...)
-
-```
-
-## WSGI 支持
-
-你可以在 WSGI 的框架下（例如在阿里云的函数计算的 HTTP 入口中）引入本框架。
-
-```python
-import simple_http_server.server as server
-import os
-from simple_http_server import request_map
-
-
-# 扫描你的控制器函数
-server.scan("tests/ctrls", r'.*controllers.*')
-# 或者在这里定义一个controller
-@request_map("/hello_wsgi")
-def my_controller(name: str):
-    return 200, "Hello, WSGI!"
-# 初始化一个 wsgi 代理，入参 resources 为可选参数。
-wsgi_proxy = server.init_wsgi_proxy(resources={"/public/*": f"/you/static/files/path"})
-
-# WSGI 标准入口
-def handler(environ, start_response):
-    return wsgi_proxy.app_proxy(environ, start_response)
-```
-
-## ASGI 支持
-
-可以在 ASGI 的框架上（例如 `uvicorn`）使用本框架。
-
-*由于 ASGI 框架的标准，在 ASGI 框架上，websocket 仅支持发送`文字`以及`二进制`消息，不支持发送 ping/pone/frame 等高级功能。*
-
-```python
-
-import asyncio
-import uvicorn
-import simple_http_server.server as server
-from simple_http_server.server import ASGIProxy
-
-
-asgi_proxy: ASGIProxy = None
-init_asgi_proxy_lock: asyncio.Lock = asyncio.Lock()
-
-
-async def init_asgi_proxy():
-    global asgi_proxy
-    if asgi_proxy == None:
-        async with init_asgi_proxy_lock:
-            if asgi_proxy == None:
-                server.scan(base_dir="tests/ctrls", regx=r'.*controllers.*')
-                asgi_proxy = server.init_asgi_proxy(resources={"/public/*": "tests/static"})
-
-async def app(scope, receive, send):
-    await init_asgi_proxy()
-    await asgi_proxy.app_proxy(scope, receive, send)
-
-def main():
-    config = uvicorn.Config("main:app", host="0.0.0.0", port=9090, log_level="info")
-    asgi_server = uvicorn.Server(config)
-    asgi_server.run()
-
-if __name__ == "__main__":
-    main()
 
 ```
 

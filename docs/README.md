@@ -1,10 +1,10 @@
-# python-simple-http-server
+# Naja-Atra
 
-[![PyPI version](https://badge.fury.io/py/simple-http-server.png)](https://badge.fury.io/py/simple-http-server)
+[![PyPI version](https://badge.fury.io/py/naja-atra.png)](https://badge.fury.io/py/naja-atra)
 
-## Discription
+Naja-Atra is a lightweight python web framework. It's designed to make starting a web service easier. It supports both HTTP and WebSocket. 
 
-This is a simple http server, use MVC like design.
+This project is a folk from [python-simple-http-server](https://github.com/keijack/python-simple-http-server), if you use that module before, you can use this module by rename the import module name.
 
 ## Support Python Version
 
@@ -15,15 +15,15 @@ Python 3.7+
 * Lightway.
 * Functional programing.
 * Filter chain support.
-* Session support, and can support distributed session by [this extention](https://github.com/keijack/python-simple-http-server-redis-session).
-* You can use [this extention](https://github.com/keijack/python-simple-http-server-jinja) to support `jinja` views.
+* Session support, and can support distributed session by [this extention](https://github.com/naja-atra/naja-atra-redis-session).
+* You can use [this extention](https://github.com/naja-atra/naja-atra-jinja) to support `jinja` views.
 * Spring MVC like request mapping.
 * SSL support.
 * Websocket support
 * Easy to use.
 * Free style controller writing.
-* Easily integraded with WSGI servers. 
-* Easily integraded with ASGI servers. Websocket will be supported when ASGI server enable websocket functions.
+* Easily integraded with WSGI servers with [this extention](https://github.com/naja-atra/naja-atra-wsgi). 
+* Easily integraded with ASGI servers with [this extension](https://github.com/naja-atra/naja-atra-asgi). Websocket will be supported when ASGI server enable websocket functions.
 * Coroutine mode support.
 
 ## Dependencies
@@ -39,16 +39,16 @@ python3 -m pip install websocket-client
 ### Install
 
 ```shell
-python3 -m pip install simple_http_server
+python3 -m pip install naja_atra
 ```
 
 ### Minimum code / component requirement setup
 
 Minimum code to get things started should have at least one controller function,<br /> 
-using the route and server modules from simple_http_server
+using the route and server modules from naja_atra
 
 ```python
-from simple_http_server import route, server
+from naja_atra import route, server
     
 @route("/")
 def index():
@@ -61,25 +61,25 @@ server.start(port=9090)
 
 ```python
 
-from simple_http_server import request_map
-from simple_http_server import Response
-from simple_http_server import MultipartFile
-from simple_http_server import Parameter
-from simple_http_server import Parameters
-from simple_http_server import Header
-from simple_http_server import JSONBody
-from simple_http_server import HttpError
-from simple_http_server import StaticFile
-from simple_http_server import Headers
-from simple_http_server import Cookies
-from simple_http_server import Cookie
-from simple_http_server import Redirect
-from simple_http_server import ModelDict
+from naja_atra import request_map
+from naja_atra import Response
+from naja_atra import MultipartFile
+from naja_atra import Parameter
+from naja_atra import Parameters
+from naja_atra import Header
+from naja_atra import JSONBody
+from naja_atra import HttpError
+from naja_atra import StaticFile
+from naja_atra import Headers
+from naja_atra import Cookies
+from naja_atra import Cookie
+from naja_atra import Redirect
+from naja_atra import ModelDict
 
 # request_map has an alias name `route`, you can select the one you familiar with.
 @request_map("/index")
 def my_ctrl():
-    return {"code": 0, "message": "success"}  # You can return a dictionary, a string or a `simple_http_server.simple_http_server.Response` object.
+    return {"code": 0, "message": "success"}  # You can return a dictionary, a string or a `naja_atra.naja_atra.Response` object.
 
 
 @route("/say_hello", method=["GET", "POST"])
@@ -359,7 +359,7 @@ class MyController:
 Defaultly, the session is stored in local, you can extend `SessionFactory` and `Session` classes to implement your own session storage requirement (like store all data in redis or memcache)
 
 ```python
-from simple_http_server import Session, SessionFactory, set_session_factory
+from naja_atra import Session, SessionFactory, set_session_factory
 
 class MySessionImpl(Session):
 
@@ -411,18 +411,18 @@ set_session_factory(MySessionFacImpl())
 
 ```
 
-There is an offical Redis implementation here: https://github.com/keijack/python-simple-http-server-redis-session.git
+There is an offical Redis implementation here: https://github.com/keijack/naja-atra-redis-session.git
 
 ### Websocket
 
 To handle a websocket session, you should handle multiple events, so it's more reasonable to use a class rather than functions to do it. 
 
-In this framework, you should use `@websocket_handler` to decorate the class you want to handle websocket session. Specific event listener methods should be defined in a fixed way. However, the easiest way to do it is to inherit `simple_http_server.WebsocketHandler` class, and choose the event you want to implement. But this inheritance is not compulsory.
+In this framework, you should use `@websocket_handler` to decorate the class you want to handle websocket session. Specific event listener methods should be defined in a fixed way. However, the easiest way to do it is to inherit `naja_atra.WebsocketHandler` class, and choose the event you want to implement. But this inheritance is not compulsory.
 
 You can configure `endpoit` or `regexp` in `@websocket_handler` to setup which url the class should handle. Alongside, there is a `singleton` field, which is set to `True` by default. Which means that all connections are handle by ONE object of this class. If this field is set to `False`, objects will be created when every `WebsocketSession` try to connect.
 
 ```python
-from simple_http_server import WebsocketHandler, WebsocketRequest,WebsocketSession, websocket_handler
+from naja_atra import WebsocketHandler, WebsocketRequest,WebsocketSession, websocket_handler
 
 @websocket_handler(endpoint="/ws/{path_val}")
 class WSHandler(WebsocketHandler):
@@ -518,7 +518,7 @@ But if you want to only handle one event, you can also use a function to handle 
 
 ```python
 
-from simple_http_server import WebsocketCloseReason, WebsocketHandler, WebsocketRequest, WebsocketSession, websocket_message, websocket_handshake, websocket_open, websocket_close, WEBSOCKET_MESSAGE_TEXT
+from naja_atra import WebsocketCloseReason, WebsocketHandler, WebsocketRequest, WebsocketSession, websocket_message, websocket_handshake, websocket_open, websocket_close, WEBSOCKET_MESSAGE_TEXT
 
 @websocket_handshake(endpoint="/ws-fun/{path_val}")
 def ws_handshake(request: WebsocketRequest):
@@ -550,7 +550,7 @@ async def ws_text(session: WebsocketSession, message: str):
 You can use `@error_message` to specify your own error page. See:
 
 ```python
-from simple_http_server import error_message
+from naja_atra import error_message
 # map specified codes
 @error_message("403", "404")
 def my_40x_page(message: str, explain=""):
@@ -581,7 +581,7 @@ def my_error_message(code, message, explain=""):
 This server support filters, you can use `request_filter` decorator to define your filters.
 
 ```python
-from simple_http_server import request_filter
+from naja_atra import request_filter
 
 @request_filter("/tuple/**") # use wildcard
 @request_filter(regexp="^/tuple") # use regular expression
@@ -605,7 +605,7 @@ def filter_tuple(ctx):
 ```python
 # If you place the controllers method in the other files, you should import them here.
 
-import simple_http_server.server as server
+import naja_atra.server as server
 import my_test_ctrl
 
 
@@ -669,11 +669,11 @@ If you call the server starting in a async function, you can all its async versi
 The default logger is try to write logs to the screen, you can specify the logger handler to write it to a file.
 
 ```python
-import simple_http_server.logger as logger
+import naja_atra.logger as logger
 import logging
 
 _formatter = logging.Formatter(fmt='[%(asctime)s]-[%(name)s]-%(levelname)-4s: %(message)s')
-_handler = logging.TimedRotatingFileHandler("/var/log/simple_http_server.log", when="midnight", backupCount=7)
+_handler = logging.TimedRotatingFileHandler("/var/log/naja_atra.log", when="midnight", backupCount=7)
 _handler.setFormatter(_formatter)
 _handler.setLevel("INFO")
 
@@ -695,7 +695,7 @@ logger.set_level("DEBUG")
 You can get a stand alone logger which is independent from the framework one via a new class `logger.LoggerFactory`. 
 
 ```python
-import simple_http_server.logger as logger
+import naja_atra.logger as logger
 
 log = logger.get_logger("my_service", "my_log_fac")
 
@@ -706,73 +706,6 @@ log_fac.log_level = "DEBUG"
 log = log_fac.get_logger("my_service")
 
 log.info(...)
-
-```
-
-
-## WSGI Support
-
-You can use this module in WSGI apps. 
-
-```python
-import simple_http_server.server as server
-import os
-from simple_http_server import request_map
-
-
-# scan all your controllers
-server.scan("tests/ctrls", r'.*controllers.*')
-# or define a new controller function here
-@request_map("/hello_wsgi")
-def my_controller(name: str):
-    return 200, "Hello, WSGI!"
-# resources is optional
-wsgi_proxy = server.init_wsgi_proxy(resources={"/public/*": f"/you/static/files/path"})
-
-# wsgi app entrance. 
-def simple_app(environ, start_response):
-    return wsgi_proxy.app_proxy(environ, start_response)
-
-# If your entrance is async:
-async def simple_app(envion, start_response):
-    return await wsgi_proxy.async_app_proxy(environ, start_response)
-```
-
-## ASGI Support
-
-You can use this module in ASGI server, take `uvicorn` fro example:
-
-```python
-
-import asyncio
-import uvicorn
-import simple_http_server.server as server
-from simple_http_server.server import ASGIProxy
-
-
-asgi_proxy: ASGIProxy = None
-init_asgi_proxy_lock: asyncio.Lock = asyncio.Lock()
-
-
-async def init_asgi_proxy():
-    global asgi_proxy
-    if asgi_proxy == None:
-        async with init_asgi_proxy_lock:
-            if asgi_proxy == None:
-                server.scan(base_dir="tests/ctrls", regx=r'.*controllers.*')
-                asgi_proxy = server.init_asgi_proxy(resources={"/public/*": "tests/static"})
-
-async def app(scope, receive, send):
-    await init_asgi_proxy()
-    await asgi_proxy.app_proxy(scope, receive, send)
-
-def main():
-    config = uvicorn.Config("main:app", host="0.0.0.0", port=9090, log_level="info")
-    asgi_server = uvicorn.Server(config)
-    asgi_server.run()
-
-if __name__ == "__main__":
-    main()
 
 ```
 
