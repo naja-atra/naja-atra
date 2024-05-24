@@ -1,4 +1,4 @@
-# Naja-Atra
+# Naja-Atra（饭铲头）
 
 `Naja-Atra` 是一个轻量化的 Python Web 框架。支持 HTTP 与 WebSocket 协议。
 
