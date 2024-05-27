@@ -669,7 +669,7 @@ If you call the server starting in a async function, you can all its async versi
 The default logger is try to write logs to the screen, you can specify the logger handler to write it to a file.
 
 ```python
-import naja_atra.logger as logger
+import naja_atra.utils.logger as logger
 import logging
 
 _formatter = logging.Formatter(fmt='[%(asctime)s]-[%(name)s]-%(levelname)-4s: %(message)s')
@@ -695,7 +695,7 @@ logger.set_level("DEBUG")
 You can get a stand alone logger which is independent from the framework one via a new class `logger.LoggerFactory`. 
 
 ```python
-import naja_atra.logger as logger
+import naja_atra.utils.logger as logger
 
 log = logger.get_logger("my_service", "my_log_fac")
 

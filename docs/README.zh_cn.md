@@ -960,7 +960,7 @@ server.start(host="",
 默认情况下，日志会输出到控制台，你创建自己的 Logging Handler 来将日志输出到别处，例如一个滚动文件中：
 
 ```python
-import naja_atra.logger as logger
+import naja_atra.utils.logger as logger
 import logging
 
 _formatter = logging.Formatter(fmt='[%(asctime)s]-[%(name)s]-%(levelname)-4s: %(message)s')
@@ -988,7 +988,7 @@ logger.set_level("DEBUG")
 你可以通过 `logger.LoggerFactory` 来取得新的 logger，这个 logger 将与框架默认的区分开来，通过这个方法，你可以分开控制框架和业务的日志级别。
 
 ```python
-import naja_atra.logger as logger
+import naja_atra.utils.logger as logger
 
 log = logger.get_logger("my_service", "my_log_fac")
 
