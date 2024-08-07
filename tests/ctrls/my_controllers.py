@@ -332,7 +332,14 @@ class IndexPage:
 def header_narrowing():
     return "a^=b"
 
+
 @route(url="/chunked", method=["POST", "PUT"])
 async def chunked(reader: RequestBodyReader):
     data = await reader.read_to_end()
     return {"code": 0, "data": data.decode("utf-8")}
+
+
+@route("/arr")
+def arr(arr: list[str]):
+
+    return {"code": 0, "data": arr}

@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import json
+import sys
 from typing import Any, Dict, List, Type
 from http.cookies import BaseCookie, SimpleCookie
 from ..models import ModelDict, Environment, RegGroup, RegGroups, HttpError, RequestBodyReader, \
@@ -420,3 +421,10 @@ class ModelBindingConf:
             dict: DictModelBinding,
             Dict: DictModelBinding
         }
+        if sys.version_info >= (3, 9):
+            self.model_bingding_types[list[str]] = ListModelBinding
+            self.model_bingding_types[list[Parameter]] = ListModelBinding
+            self.model_bingding_types[list[int]] = ListModelBinding
+            self.model_bingding_types[list[bool]] = ListModelBinding
+            self.model_bingding_types[list[Dict]] = ListModelBinding
+            self.model_bingding_types[list[dict]] = ListModelBinding
