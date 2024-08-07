@@ -413,7 +413,8 @@ class ModelBindingConf:
             List: ListModelBinding,
             List[str]: ListModelBinding,
             List[Parameter]: ListModelBinding,
-            List[int]: ListModelBinding, List[float]: ListModelBinding,
+            List[int]: ListModelBinding, 
+            List[float]: ListModelBinding,
             List[bool]: ListModelBinding,
             List[dict]: ListModelBinding,
             List[Dict]: ListModelBinding,
@@ -426,5 +427,6 @@ class ModelBindingConf:
             self.model_bingding_types[list[Parameter]] = ListModelBinding
             self.model_bingding_types[list[int]] = ListModelBinding
             self.model_bingding_types[list[bool]] = ListModelBinding
+            self.model_bingding_types[list[float]] = ListModelBinding
             self.model_bingding_types[list[Dict]] = ListModelBinding
             self.model_bingding_types[list[dict]] = ListModelBinding

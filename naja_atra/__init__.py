@@ -26,4 +26,4 @@ from .app_conf import *
 from .models import *
 
 name = "naja-atra"
-version = "1.1.2"
+version = "1.1.3"
