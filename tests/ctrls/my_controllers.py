@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import time
+import time, sys, os
 from typing import List, OrderedDict
 
 from naja_atra import BytesBody, FilterContext, ModelDict, Redirect, RegGroup, RequestBodyReader, request_filter
@@ -22,7 +22,7 @@ from naja_atra import request_map, route
 from naja_atra import controller
 from naja_atra import error_message
 from naja_atra.app_conf import get_app_conf
-import os
+
 import naja_atra.utils.logger as logger
 
 
@@ -339,7 +339,8 @@ async def chunked(reader: RequestBodyReader):
     return {"code": 0, "data": data.decode("utf-8")}
 
 
-@route("/arr")
-def arr(arr: list[str]):
+if sys.version_info >= (3, 9):        
+    @route("/arr")
+    def arr(arr: list[str]):
 
-    return {"code": 0, "data": arr}
+        return {"code": 0, "data": arr}
