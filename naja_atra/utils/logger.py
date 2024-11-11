@@ -87,10 +87,19 @@ class LazyCalledLoggerThread:
 
 class CachingLogger(LazyCalledLogger):
 
+    _custom_logger: logging.Logger = None
+
     logger_thread: LazyCalledLoggerThread = LazyCalledLoggerThread()
 
     def callHandlers(self, record):
+        if CachingLogger._custom_logger:
+            CachingLogger._custom_logger.callHandlers(record)
+            return
         CachingLogger.logger_thread.call_logger_handler(self, record)
+
+
+def set_custom_logger(logger: logging.Logger) -> None:
+    CachingLogger._custom_logger = logger
 
 
 class LoggerFactory:
