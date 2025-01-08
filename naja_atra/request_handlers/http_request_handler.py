@@ -39,7 +39,6 @@ from asyncio.streams import StreamReader, StreamWriter
 from http import HTTPStatus
 
 from .. import name, version
-from ..models import RequestBodyReader
 from ..utils import http_utils
 from ..utils.logger import get_logger
 from ..http_servers.routing_server import RoutingServer
