@@ -86,7 +86,7 @@ class ThreadingServerTest(unittest.TestCase):
 
     def test_header_echo(self):
         res: http.client.HTTPResponse = self.visit(
-            f"header_echo", headers={"X-KJ-ABC": "my-headers"}, return_type="RESPONSE")
+            "header_echo", headers={"X-KJ-ABC": "my-headers"}, return_type="RESPONSE")
         assert "X-Kj-Abc" in res.headers
         assert res.headers["X-Kj-Abc"] == "my-headers"
 
@@ -96,7 +96,7 @@ class ThreadingServerTest(unittest.TestCase):
 
     def test_gzip(self):
         res: http.client.HTTPResponse = self.visit(
-            f"public/a.txt", headers={"Accept-Encoding": "gzip ,deflate"}, return_type="RESPONSE")
+            "public/a.txt", headers={"Accept-Encoding": "gzip ,deflate"}, return_type="RESPONSE")
         content_encoding = res.info().get("Content-Encoding")
         assert "gzip" == content_encoding
         f = GzipFile(fileobj=res)
@@ -119,7 +119,7 @@ class ThreadingServerTest(unittest.TestCase):
             assert error_msg == "code：400, message: Parameter Error!, explain: Test Parameter Error!"
 
     def test_coroutine(self):
-        txt = self.visit(f"%E4%B8%AD%E6%96%87/coroutine?hey=KJ2")
+        txt = self.visit("%E4%B8%AD%E6%96%87/coroutine?hey=KJ2")
         assert txt == "Success! KJ2"
 
     def test_post_json(self):
@@ -127,7 +127,7 @@ class ThreadingServerTest(unittest.TestCase):
             "code": 0,
             "msg": "xxx"
         }
-        res: str = self.visit(f"post_json", headers={
+        res: str = self.visit("post_json", headers={
                               "Content-Type": "application/json"}, data=json.dumps(data_dict).encode(errors="replace"))
         res_dict: dict = json.loads(res)
         assert data_dict["code"] == res_dict["code"]
@@ -135,7 +135,7 @@ class ThreadingServerTest(unittest.TestCase):
 
     def test_filter(self):
         res: http.client.HTTPResponse = self.visit(
-            f"tuple?user_name=kj&pass=wu", return_type="RESPONSE")
+            "tuple?user_name=kj&pass=wu", return_type="RESPONSE")
         assert "Res-Filter-Header" in res.headers
         assert res.headers["Res-Filter-Header"] == "from-filter"
 
@@ -264,7 +264,7 @@ class ThreadingServerTest(unittest.TestCase):
                 "Developer Network\r\n"
                 "0\r\n"
                 "\r\n"
-            ).format(f"/chunked", f"127.0.0.1:{self.PORT}")
+            ).format("/chunked", f"127.0.0.1:{self.PORT}")
 
             sock.sendall(request.encode('utf-8'))
             response = b''
