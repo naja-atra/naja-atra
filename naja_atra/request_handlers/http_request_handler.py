@@ -166,7 +166,7 @@ class HttpRequestHandler:
         if not 2 <= len(words) <= 3:
             self.send_error(
                 HTTPStatus.BAD_REQUEST,
-                "Bad request syntax (%r)" % requestline)
+                f"Bad request syntax ({requestline})")
             return False
         command, path = words[:2]
         if len(words) == 2:
@@ -177,6 +177,15 @@ class HttpRequestHandler:
                     "Bad HTTP/0.9 request type (%r)" % command)
                 return False
         self.command, self.path = command, path
+
+        if self.path.find("/../") >= 0 or self.path.find("/./") >= 0:
+            msg = "Bad request synatx: /../ or /./ found in path!"
+            self.send_error(
+                HTTPStatus.BAD_REQUEST,
+                msg,
+                msg
+            )
+            return False
 
         self.request_path = self._get_request_path(self.path)
 
