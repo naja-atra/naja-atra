@@ -88,7 +88,7 @@ class HttpRequestHandler:
         self.requestline = ''
         self.request_version = ''
         self.command = ''
-        self.path = ''
+        self.raw_path = ''
         self.request_path = ''
         self.query_string = ''
         self.query_parameters = {}
@@ -174,8 +174,11 @@ class HttpRequestHandler:
                     HTTPStatus.BAD_REQUEST,
                     "Bad HTTP/0.9 request type (%r)" % command)
                 return False
+        self.command, self.raw_path = command, req_path
+
         try:
-            self.command, self.path = command, http_utils.normalize_path(req_path)
+            self.request_path = http_utils.normalize_path(self._get_request_path(self.raw_path))
+            _logger.debug(f"Request Path is normalized to {self.request_path}")
         except ValueError as e:
             self.send_error(
                 HTTPStatus.BAD_REQUEST,
@@ -184,11 +187,7 @@ class HttpRequestHandler:
             )
             return False
 
-        _logger.debug(f"Request Path is normalized to {self.path}")
-
-        self.request_path = self._get_request_path(self.path)
-
-        self.query_string = self.__get_query_string(self.path)
+        self.query_string = self.__get_query_string(self.raw_path)
 
         self.query_parameters = http_utils.decode_query_string(
             self.query_string)
