@@ -215,3 +215,43 @@ def get_path_reg_pattern(url):
         name = name[1: -1]
         quoted_names.append(quote(name))
     return _url, quoted_names
+
+
+def normalize_path(path: str) -> str:
+    """
+    Normalize a POSIX-style path lexically and optionally raise if normalization
+    would move above the root directory.
+
+    - path: input path string (e.g. '/a/../b/' or 'a/../b')
+    - raise_on_above_root: if True and input is absolute, raise ValueError when
+      '..' would go above '/'
+    - keep_trailing: if True and input ended with '/', re-add trailing slash
+    """
+    if path is None:
+        raise TypeError("path must be a string")
+
+    is_abs = path.startswith('/')
+    parts = path.split('/')
+    stack = []
+
+    for part in parts:
+        if part == '' or part == '.':
+            # skip empty segments (from '//' or leading/trailing '/') and '.'
+            continue
+        if part == '..':
+            if stack:
+                stack.pop()
+            else:
+                raise ValueError(f"Path attempts to go above root: {path!r}")
+        else:
+            stack.append(part)
+
+    if is_abs:
+        result = '/' + '/'.join(stack)
+    else:
+        result = '/'.join(stack) or ''
+
+    if path.endswith('/') and result != '/':
+        result += '/'
+
+    return result

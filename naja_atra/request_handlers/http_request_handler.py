@@ -26,11 +26,9 @@ import html
 import re
 import http.client
 import email.parser
-import email.message
 import socketserver
 import asyncio
 import socket
-
 
 from typing import Any, Dict
 from http import HTTPStatus
@@ -168,7 +166,7 @@ class HttpRequestHandler:
                 HTTPStatus.BAD_REQUEST,
                 f"Bad request syntax ({requestline})")
             return False
-        command, path = words[:2]
+        command, req_path = words[:2]
         if len(words) == 2:
             self.close_connection = True
             if command != 'GET':
@@ -176,16 +174,17 @@ class HttpRequestHandler:
                     HTTPStatus.BAD_REQUEST,
                     "Bad HTTP/0.9 request type (%r)" % command)
                 return False
-        self.command, self.path = command, path
-
-        if self.path.find("/../") >= 0 or self.path.find("/./") >= 0:
-            msg = "Bad request synatx: /../ or /./ found in path!"
+        try:
+            self.command, self.path = command, http_utils.normalize_path(req_path)
+        except ValueError as e:
             self.send_error(
                 HTTPStatus.BAD_REQUEST,
-                msg,
-                msg
+                str(e),
+                str(e)
             )
             return False
+
+        _logger.debug(f"Request Path is normalized to {self.path}")
 
         self.request_path = self._get_request_path(self.path)
 
