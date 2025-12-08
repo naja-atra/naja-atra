@@ -113,7 +113,7 @@ class HttpRequestHandler:
                 # For blocking io. Set the Original timeout to the connection.
                 self.reader.connection.settimeout(self.reader.timeout)
         except asyncio.TimeoutError:
-            _logger.warn("Wait for reading request line timeout. ")
+            _logger.warning("Wait for reading request line timeout. ")
             return False
         if len(raw_requestline) > _LINE_MAX_BYTES:
             self.requestline = ''

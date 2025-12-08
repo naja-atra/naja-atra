@@ -114,7 +114,7 @@ class _ControllerFunction:
                 self.func) or inspect.ismethod(self.func))
             return True
         except AssertionError as ae:
-            _logger.warn(
+            _logger.warning(
                 f"[{self.__url}|{self.regexp}] => {self.func} configurate error: {ae}")
             return False
 
@@ -245,7 +245,7 @@ class _WebsocketHandlerClass:
             assert self.cls is not None and inspect.isclass(self.cls)
             return True
         except AssertionError as ae:
-            _logger.warn(
+            _logger.warning(
                 f"[{self.__url}|{self.regexp}] => {self.cls} configurate error: {ae}")
             return False
 
