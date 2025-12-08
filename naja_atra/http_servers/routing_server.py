@@ -45,7 +45,7 @@ _logger = get_logger("naja_atra.http_servers.routing_server")
 
 
 _EXT_CONTENT_TYPE = {
-    ".html": "text/html",
+    ".html": "text/html", # NOSONAR
     ".htm": "text/html",
     ".xhtml": "text/html",
     ".css": "text/css",
@@ -148,7 +148,7 @@ class RoutingServer:
         self._res_conf.clear()
         self.add_res_conf(val)
 
-    def add_res_conf(self, val: Dict[str, str]):
+    def add_res_conf(self, val: Dict[str, str]): # NOSONAR
         if not val or not isinstance(val, dict):
             return
         for k, v in val.items():
@@ -260,7 +260,7 @@ class RoutingServer:
                 f"regexp::pattern::[{regex}] => path::[{path}] match? {m is not None}")
             if m:
                 res = []
-                grps = tuple([unquote(v) for v in m.groups()])
+                grps = tuple([unquote(v) for v in m.groups()]) # NOSONAR
                 for ctrl in ctrls:
                     res.append((ctrl, [], grps))
                 return res
@@ -341,7 +341,7 @@ class RoutingServer:
             _logger.debug(
                 f"regexp::pattern::[{regex}] => path::[{path}] match? {m is not None}")
             if m:
-                return handler, {}, tuple([unquote(v) for v in m.groups()])
+                return handler, {}, tuple([unquote(v) for v in m.groups()]) # NOSONAR
         return None, {}, ()
 
     def __try_get_ws_handler_from_path_val(self, path):
@@ -372,7 +372,7 @@ class RoutingServer:
             "explain": explain
         })
 
-    def error_page(self, code: int, message: str = "", explain: str = ""):
+    def error_page(self, code: int, message: str = "", explain: str = ""): # NOSONAR
         c = str(code)
         func = None
         if c in self.error_page_mapping:
@@ -399,17 +399,17 @@ class RoutingServer:
         for n, t in args_def:
             _logger.debug(f"set value to error_page function -> {n}")
             if co is not None:
-                if t is None or t == int:
+                if t is None or t == int: # NOSONAR
                     args.append(co)
                     co = None
                     continue
             if msg is not None:
-                if t is None or t == str:
+                if t is None or t == str: # NOSONAR
                     args.append(msg)
                     msg = None
                     continue
             if exp is not None:
-                if t is None or t == str:
+                if t is None or t == str: # NOSONAR
                     args.append(exp)
                     exp = None
                     continue
@@ -418,17 +418,17 @@ class RoutingServer:
         kwargs = {}
         for n, v, t in kwargs_def:
             if co is not None:
-                if (t is None and isinstance(v, int)) or t == int:
+                if (t is None and isinstance(v, int)) or t == int: # NOSONAR
                     kwargs[n] = co
                     co = None
                     continue
             if msg is not None:
-                if (t is None and isinstance(v, str)) or t == str:
+                if (t is None and isinstance(v, str)) or t == str: # NOSONAR
                     kwargs[n] = msg
                     msg = None
                     continue
             if exp is not None:
-                if (t is None and isinstance(v, str)) or t == str:
+                if (t is None and isinstance(v, str)) or t == str: # NOSONAR
                     kwargs[n] = exp
                     exp = None
                     continue

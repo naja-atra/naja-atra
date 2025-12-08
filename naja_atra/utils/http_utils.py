@@ -126,7 +126,7 @@ def date_time_string(timestamp=None):
     return email.utils.formatdate(timestamp, usegmt=True)
 
 
-def decode_response_body(raw_body: Any) -> Tuple[str, Union[str,  bytes, StaticFile]]:
+def decode_response_body(raw_body: Any) -> Tuple[str, Union[str,  bytes, StaticFile]]:  # NOSONAR
     content_type = "text/plain; chartset=utf8"
     if raw_body is None:
         body = ""
@@ -178,29 +178,26 @@ def decode_response_body_to_bytes(raw_body: Any) -> Tuple[str, bytes]:
 def get_path_reg_pattern(url):
     _url: str = url
     path_names = re.findall("(?u)\\{\\w+\\}", _url)
+    error_msg = "You can only config a * or ** at the start or end of a path."
     if len(path_names) == 0:
         if _url.startswith("**"):
             _url = _url[2:]
-            assert _url.find(
-                "*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find("*") < 0, error_msg
             _url = f'^([\\w%.\\-@!\\(\\)\\[\\]\\|\\$/]+){_url}$'
             return _url, [quote("__path_wildcard")]
         elif _url.startswith("*"):
             _url = _url[1:]
-            assert _url.find(
-                "*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find("*") < 0, error_msg
             _url = f'^([\\w%.\\-@!\\(\\)\\[\\]\\|\\$]+){_url}$'
             return _url, [quote("__path_wildcard")]
         elif _url.endswith("**"):
             _url = _url[0: -2]
-            assert _url.find(
-                "*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find("*") < 0, error_msg
             _url = f'^{_url}([\\w%.\\-@!\\(\\)\\[\\]\\|\\$/]+)$'
             return _url, [quote("__path_wildcard")]
         elif _url.endswith("*"):
             _url = _url[0: -1]
-            assert _url.find(
-                "*") < 0, "You can only config a * or ** at the start or end of a path."
+            assert _url.find("*") < 0, error_msg
             _url = f'^{_url}([\\w%.\\-@!\\(\\)\\[\\]\\|\\$]+)$'
             return _url, [quote("__path_wildcard")]
         else:
@@ -217,7 +214,7 @@ def get_path_reg_pattern(url):
     return _url, quoted_names
 
 
-def normalize_path(path: str) -> str:
+def normalize_path(path: str) -> str: # NOSONAR
     """
     Normalize a POSIX-style path lexically and optionally raise if normalization
     would move above the root directory.

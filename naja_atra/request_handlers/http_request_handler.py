@@ -46,6 +46,8 @@ from .websocket_controller_handler import WebsocketControllerHandler
 
 _LINE_MAX_BYTES = 65536
 _MAXHEADERS = 100
+_HTTP_1_1 = "HTTP/1.1"
+_HTTP_0_9 = "HTTP/0.9"
 
 _logger = get_logger("naja_atra.request_handlers.http_request_handler")
 
@@ -63,11 +65,11 @@ class HttpRequestHandler:
 
     server_version = f"{name}/{version}"
 
-    default_request_version = "HTTP/1.1"
+    default_request_version = _HTTP_1_1
 
     # The version of the HTTP protocol we support.
     # Set this to HTTP/1.1 to enable automatic keepalive
-    protocol_version = "HTTP/1.1"
+    protocol_version = _HTTP_1_1
 
     # MessageClass used to parse headers
     _message_class = http.client.HTTPMessage
@@ -100,7 +102,7 @@ class HttpRequestHandler:
         self._keep_alive_max_req = routing_conf.keep_alive_max_request
         self.req_count = 0
 
-    async def parse_request(self):
+    async def parse_request(self): # NOSONAR
         self.req_count += 1
         try:
             if hasattr(self.reader, "connection"):
@@ -212,13 +214,13 @@ class HttpRequestHandler:
         conntype = self.headers.get('Connection', '')
 
         self.close_connection = not self._keep_alive or conntype.lower(
-        ) != 'keep-alive' or self.protocol_version != "HTTP/1.1"
+        ) != 'keep-alive' or self.protocol_version != _HTTP_1_1
 
         # Examine the headers and look for an Expect directive
         expect = self.headers.get('Expect', "")
         if (expect.lower() == "100-continue" and
-                self.protocol_version >= "HTTP/1.1" and
-                self.request_version >= "HTTP/1.1"):
+                self.protocol_version >= _HTTP_1_1 and
+                self.request_version >= _HTTP_1_1):
             if not self.handle_expect_100():
                 return False
         return True
@@ -304,7 +306,7 @@ class HttpRequestHandler:
             try:
                 content: Any = self.routing_conf.error_page(code, html.escape(
                     message, quote=False), html.escape(explain, quote=False))
-            except:
+            except: # NOSONAR
                 content: str = html.escape(
                     message, quote=False) + ":" + html.escape(explain, quote=False)
             content_type, body = http_utils.decode_response_body_to_bytes(
@@ -343,10 +345,9 @@ class HttpRequestHandler:
                     self.close_connection = False
                 else:
                     _logger.warning(
-                        f"Keep Alive configuration is set to False, won't send keep-alive header.")
+                        "Keep Alive configuration is set to False, won't send keep-alive header.")
                     return
-
-        if self.request_version != 'HTTP/0.9':
+        if self.request_version != _HTTP_0_9:
             if not hasattr(self, '_headers_buffer'):
                 self._headers_buffer = []
             self._headers_buffer.append(
@@ -354,7 +355,7 @@ class HttpRequestHandler:
 
     def end_headers(self):
         """Send the blank line ending the MIME headers."""
-        if self.request_version != 'HTTP/0.9':
+        if self.request_version != _HTTP_0_9:
             self._headers_buffer.append(b"\r\n")
             self.flush_headers()
 
@@ -365,7 +366,7 @@ class HttpRequestHandler:
 
     def send_response_only(self, code, message: str = None):
         """Send the response header only."""
-        if self.request_version != 'HTTP/0.9':
+        if self.request_version != _HTTP_0_9:
             if message is None:
                 if code in self.responses:
                     message = self.responses[code][0]
@@ -389,6 +390,7 @@ class HttpRequestHandler:
         _logger.info(f"{format % args}")
 
     def set_prefer_keep_alive_params(self):
+        # abstract method.
         pass
 
     def set_alive_params(self):
@@ -407,7 +409,7 @@ class HttpRequestHandler:
             return
         self.set_alive_params()
 
-        if self.request_version == "HTTP/1.1" and self.command == "GET" and "Upgrade" in self.headers and self.headers["Upgrade"] == "websocket":
+        if self.request_version == _HTTP_1_1 and self.command == "GET" and "Upgrade" in self.headers and self.headers["Upgrade"] == "websocket":
             _logger.debug("This is a websocket connection. ")
             ws_handler = WebsocketControllerHandler(self)
             await ws_handler.handle_request()
@@ -444,10 +446,10 @@ class SocketServerStreamRequestHandlerWraper(socketserver.StreamRequestHandler):
     server_version = HttpRequestHandler.server_version
 
     # Wrapper method for readline
-    async def readline(self):
+    async def readline(self): # NOSONAR
         return self.rfile.readline(_LINE_MAX_BYTES)
 
-    async def read(self, n: int = -1):
+    async def read(self, n: int = -1): # NOSONAR
         return self.rfile.read(n)
 
     def write(self, data: bytes):

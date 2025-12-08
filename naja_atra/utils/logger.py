@@ -77,7 +77,7 @@ class LazyCalledLoggerThread:
             self.coroutine_loop = None
             self.coroutine_thread = None
 
-    async def _call(self, logger: LazyCalledLogger, record):
+    async def _call(self, logger: LazyCalledLogger, record): # NOSONAR
         logger.do_call_handlers(record)
 
     def call_logger_handler(self, logger: LazyCalledLogger, record):

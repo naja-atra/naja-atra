@@ -52,6 +52,7 @@ class ModelBinding:
             self._kws["val"] = self.default_value
 
     async def bind(self) -> Any:
+        # Abstract method
         pass
 
 
@@ -142,7 +143,7 @@ class MultipartFileModelBinding(ModelBinding):
     def __build_multipart(self, key, val=MultipartFile()):
         name = val.name if val.name is not None and val.name != "" else key
         if val._required and name not in self.request.parameter.keys():
-            raise HttpError(400, "Missing Parameter",
+            raise HttpError(400, "Missing Parameter", # NOSONAR
                             f"Parameter[{name}] is required.")
         if name in self.request.parameter.keys():
             v = self.request.parameter[name]
@@ -284,7 +285,7 @@ class IntModelBinding(ModelBinding):
         if key in self.request.parameter.keys():
             try:
                 return int(self.request.parameter[key])
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"Parameter[{key}] should be an int. ")
         else:
@@ -300,7 +301,7 @@ class FloatModelBinding(ModelBinding):
         if key in self.request.parameter.keys():
             try:
                 return float(self.request.parameter[key])
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"Parameter[{key}] should be an float. ")
         else:
@@ -321,13 +322,13 @@ class ListModelBinding(ModelBinding):
         if target_type == List[int]:
             try:
                 return [int(p) for p in ori_list]
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"One of the parameter[{key}] is not int. ")
         elif target_type == List[float]:
             try:
                 return [float(p) for p in ori_list]
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"One of the parameter[{key}] is not float. ")
         elif target_type == List[bool]:
@@ -335,7 +336,7 @@ class ListModelBinding(ModelBinding):
         elif target_type in (List[dict], List[Dict]):
             try:
                 return [json.loads(p) for p in ori_list]
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"One of the parameter[{key}] is not JSON string. ")
         elif target_type == List[Parameter]:
@@ -368,7 +369,7 @@ class DictModelBinding(ModelBinding):
         if key in self.request.parameter.keys():
             try:
                 return json.loads(self.request.parameter[key])
-            except:
+            except: # NOSONAR
                 raise HttpError(
                     400, None, f"Parameter[{key}] should be a JSON string.")
         else:

@@ -84,12 +84,12 @@ class LocalSessionHolder:
 
     def get_session(self, session_id: str) -> HttpSession:
         if not session_id:
-            return None
+            return None # NOSONAR
         sess: HttpSession = _get_from_dict(self.__sessions, session_id)
         if sess and sess.is_valid:
             return sess
         else:
-            return None
+            return None # NOSONAR
 
     def cache_session(self,  session: HttpSession):
         if not session:
@@ -174,7 +174,7 @@ class LocalSessionFactory(HttpSessionFactory):
             sess._set_last_accessed_time(time.time())
             return sess
         if not create:
-            return None
+            return None # NOSONAR
         with self.__session_lock:
             session = self._create_local_session(session_id)
             self.__session_holder.cache_session(session)

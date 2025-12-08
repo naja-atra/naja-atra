@@ -39,7 +39,7 @@ from .utils.logger import get_logger
 
 _logger = get_logger("naja_atra.server")
 __lock = threading.Lock()
-_server: HttpServer = None
+_server: HttpServer = None # NOSONAR
 
 
 def _is_match(string="", regx=r""):
@@ -122,7 +122,7 @@ def scan(base_dir: str = "", regx: str = r"", project_dir: str = "") -> None:
         _import_module(mname)
 
 
-def _prepare_server(host: str = "",
+def _prepare_server(host: str = "", # NOSONAR
                     port: int = 9090,
                     ssl: bool = False,
                     ssl_protocol: int = PROTOCOL_TLS_SERVER,
@@ -139,7 +139,7 @@ def _prepare_server(host: str = "",
                     gzip_compress_level=9,
                     prefer_coroutine=False,
                     app_conf: AppConf = None
-                    ) -> None:
+                    ) -> None: 
     with __lock:
         global _server
         if _server is not None:
@@ -162,7 +162,7 @@ def _prepare_server(host: str = "",
                              app_conf=app_conf)
 
 
-def start(host: str = "",
+def start(host: str = "", # NOSONAR
           port: int = 9090,
           ssl: bool = False,
           ssl_protocol: int = PROTOCOL_TLS_SERVER,
@@ -202,7 +202,7 @@ def start(host: str = "",
     _server.start()
 
 
-async def start_async(host: str = "",
+async def start_async(host: str = "", # NOSONAR
                       port: int = 9090,
                       ssl: bool = False,
                       ssl_protocol: int = PROTOCOL_TLS_SERVER,

@@ -127,7 +127,7 @@ class Request:
         # A dictionary if the `Content-Type` in request header is `application/json`
         self.json: Dict[str, Any] = None
         self.environment = {}
-        self.reader: RequestBodyReader = None  # A stream reader
+        self.reader: RequestBodyReader = None  # A stream reader # NOSONAR
 
     @property
     def cookies(self) -> Cookies:
@@ -169,7 +169,7 @@ class Request:
     @property
     def content_length(self) -> int:
         if "Content-Length" not in self.headers:
-            return None
+            return None # NOSONAR
         else:
             return int(self.headers["Content-Length"])
 

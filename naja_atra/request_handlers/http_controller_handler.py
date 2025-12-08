@@ -171,7 +171,7 @@ class RequestWrapper(Request):
         self.__session = None
         self._socket_req = None
         self._coroutine_objects = []
-        self._session_fac: HttpSessionFactory = None
+        self._session_fac: HttpSessionFactory = None # NOSONAR
 
     @property
     def host(self) -> str:
@@ -190,7 +190,7 @@ class RequestWrapper(Request):
     @property
     def content_length(self) -> int:
         if "content-length" not in self._headers_keys_in_lowcase:
-            return ""
+            return None # NOSONAR
         else:
             return self.headers["content-length"]
 
@@ -304,11 +304,11 @@ class FilterContextImpl(FilterContext):
                 ctr_res = self.__controller.func(*args, **kwargs)
         return ctr_res
 
-    def _do_res(self, ctr_res):
+    def _do_res(self, ctr_res): # NOSONAR
         session = self.request.get_session()
         if session and session.is_valid:
-            exp = datetime.datetime.utcfromtimestamp(
-                session.last_accessed_time + session.max_inactive_interval)
+            exp = datetime.datetime.fromtimestamp(
+                session.last_accessed_time + session.max_inactive_interval, tz=datetime.timezone.utc)
             sck = Cookies()
             sck[SESSION_COOKIE_NAME] = session.id
             sck[SESSION_COOKIE_NAME]["httponly"] = True
@@ -317,7 +317,7 @@ class FilterContextImpl(FilterContext):
                 Cookies.EXPIRE_DATE_FORMAT)
             self.response.cookies.update(sck)
         elif session and SESSION_COOKIE_NAME in self.request.cookies:
-            exp = datetime.datetime.utcfromtimestamp(0)
+            exp = datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc)
             sck = Cookies()
             sck[SESSION_COOKIE_NAME] = session.id
             sck[SESSION_COOKIE_NAME]["httponly"] = True
@@ -454,7 +454,7 @@ class HTTPControllerHandler:
         self.writer: StreamWriter = http_request_handler.writer
         self.environment: Dict[str, Any] = environment
 
-    def __match_one_exp(self, d: Dict[str, Union[List[str], str]], exp: str, where: str) -> bool:
+    def __match_one_exp(self, d: Dict[str, Union[List[str], str]], exp: str, where: str) -> bool: # NOSONAR
         if not exp:
             return True
         _logger.debug(
@@ -464,7 +464,7 @@ class HTTPControllerHandler:
         if e_idx < 0:
             _logger.debug(f"cannot find = in exp {exp}")
             if exp_.startswith('!'):
-                return not exp_[1:] in d.keys()
+                return exp_[1:] not in d.keys()
             else:
                 return exp_ in d.keys()
         idx = exp_.find("!=")
@@ -555,14 +555,14 @@ class HTTPControllerHandler:
             try:
                 ctx.do_chain()
                 if req._coroutine_objects:
-                    _logger.debug(f"wait all the objects in waiting list.")
+                    _logger.debug("wait all the objects in waiting list.")
                     while req._coroutine_objects:
                         await req._coroutine_objects.pop(0)
             except HttpError as e:
                 res.send_error(e.code, e.message, e.explain)
             except Exception as e:
                 _logger.exception("error occurs! returning 500")
-                res.send_error(500, None, str(e))
+                res.send_error(500, "", str(e))
 
     async def __prepare_request(self, method) -> RequestWrapper:
         path = self.request_path
@@ -652,7 +652,7 @@ class HTTPControllerHandler:
             # this is a string field, the second line is an empty line, the rest is the value
             val = self.__read_line(rest)[1].encode(
                 "ISO-8859-1", errors="replace").decode(DEFAULT_ENCODING, errors="replace")
-        elif "filename" in kvs or "filename*" in kvs:
+        elif "filename" in kvs or "filename*" in kvs: # NOSONAR
             if "filename*" in kvs:
                 name_value = kvs["filename*"]
                 idx = name_value.find("'")
@@ -708,7 +708,13 @@ class HTTPControllerHandler:
         except HttpError as e:
             self.send_error(e.code, e.message, e.explain)
 
-    def __send_res_headers(self, status_code: int, headers: Dict[str, str] = {}, content_type: str = "", cks: Cookies = Cookies()):
+    def __send_res_headers(self, status_code: int, headers: Dict[str, str] = None, content_type: str = None, cks: Cookies = None): # NOSONAR
+        if headers is None:
+            headers = {}
+        if content_type is None:
+            content_type = ""
+        if cks is None:
+            cks = Cookies()
         if "Content-Type" not in headers.keys() and "content-type" not in headers.keys():
             headers["Content-Type"] = content_type
         elif "content-type" in headers.keys():

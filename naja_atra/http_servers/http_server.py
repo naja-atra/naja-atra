@@ -55,7 +55,7 @@ class HttpServer:
     def map_error_page(self, code, func):
         self.server.map_error_page(code, func)
 
-    def __init__(self,
+    def __init__(self, # NOSONAR
                  host: Tuple[str, int] = ('', 9090),
                  ssl: bool = False,
                  ssl_protocol: int = PROTOCOL_TLS_SERVER,

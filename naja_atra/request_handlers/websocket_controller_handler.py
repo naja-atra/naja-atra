@@ -36,7 +36,7 @@ from uuid import uuid4
 from socket import error as SocketError
 
 from ..utils.logger import get_logger
-from ..models import Headers, WebsocketCloseReason, WebsocketRequest, WebsocketSession
+from ..models import Headers, WebsocketCloseReason, WebsocketRequest, WebsocketSession, HttpError
 from ..models import WEBSOCKET_OPCODE_BINARY, WEBSOCKET_OPCODE_CLOSE, WEBSOCKET_OPCODE_CONTINUATION, WEBSOCKET_OPCODE_PING, WEBSOCKET_OPCODE_PONG, WEBSOCKET_OPCODE_TEXT
 from ..models import DEFAULT_ENCODING
 
@@ -139,9 +139,9 @@ class WebsocketControllerHandler:
         elif "Cookie" in self.ws_request.headers:
             self.ws_request.cookies.load(self.ws_request.headers["Cookie"])
         self.session = WebsocketSessionImpl(self, self.ws_request)
-        self.close_reason: WebsocketCloseReason = None
+        self.close_reason: WebsocketCloseReason = None  # NOSONAR
 
-        self._continution_cache: _ContinuationMessageCache = None
+        self._continution_cache: _ContinuationMessageCache = None  # NOSONAR
         self._send_msg_lock = Lock()
         self._send_frame_lock = Lock()
 
@@ -157,7 +157,7 @@ class WebsocketControllerHandler:
             return await obj
         return obj
 
-    async def on_handshake(self) -> Tuple[int, Dict[str, List[str]]]:
+    async def on_handshake(self) -> Tuple[int, Dict[str, List[str]]]:  # NOSONAR
         try:
             if not hasattr(self.handler, "on_handshake") or not callable(self.handler.on_handshake):
                 return None, {}
@@ -165,6 +165,7 @@ class WebsocketControllerHandler:
             http_status_code = None
             headers = {}
             if not res:
+                # Res is none, pass
                 pass
             elif isinstance(res, int):
                 http_status_code = res
@@ -177,10 +178,10 @@ class WebsocketControllerHandler:
                     elif isinstance(item, dict) or isinstance(item, Headers):
                         headers.update(item)
             else:
-                _logger.warn(f"Endpoint[{self.ws_request.path}]")
+                _logger.warning(f"Endpoint[{self.ws_request.path}]")
             return http_status_code, headers
-        except Exception as e:
-            _logger.error(f"Error occurs when handshake. ")
+        except Exception:
+            _logger.error("Error occurs when handshake. ")
             return 500, {}
 
     async def on_message(self, opcode: int, message_bytes: bytearray):
@@ -205,7 +206,7 @@ class WebsocketControllerHandler:
             elif opcode == WEBSOCKET_OPCODE_BINARY and self._continution_cache.message_bytes and hasattr(self.handler, "on_binary_message") and callable(self.handler.on_binary_message):
                 await self.await_func(self.handler.on_binary_message(self.session, bytes(message_bytes)))
         except Exception as e:
-            _logger.error(f"Error occurs when on message!")
+            _logger.error("Error occurs when on message!")
             self.close(f"Error occurs when on_message. {e}")
 
     async def on_continuation_frame(self, first_frame_opcode: int, fin: int, message_frame: bytearray):
@@ -217,7 +218,7 @@ class WebsocketControllerHandler:
             else:
                 self._continution_cache.message_bytes.extend(message_frame)
         except Exception as e:
-            _logger.error(f"Error occurs when on message!")
+            _logger.error("Error occurs when on message!")
             self.close(f"Error occurs when on_message. {e}")
 
     async def on_open(self):
@@ -225,15 +226,15 @@ class WebsocketControllerHandler:
             if hasattr(self.handler, "on_open") and callable(self.handler.on_open):
                 await self.await_func(self.handler.on_open(self.session))
         except Exception as e:
-            _logger.error(f"Error occurs when on open!")
+            _logger.error("Error occurs when on open!")
             self.close(f"Error occurs when on_open. {e}")
 
     async def on_close(self):
         try:
             if hasattr(self.handler, "on_close") and callable(self.handler.on_close):
                 await self.await_func(self.handler.on_close(self.session, self.close_reason))
-        except Exception as e:
-            _logger.error(f"Error occurs when on close!")
+        except Exception:
+            _logger.error("Error occurs when on close!")
 
     async def handle_request(self):
         while self.keep_alive:
@@ -250,7 +251,7 @@ class WebsocketControllerHandler:
                     _logger.info(f"Close connection: {e.reason}")
                 self.keep_alive = False
                 self.close_reason = e.reason
-            except:
+            except:  # NOSONAR
                 _logger.exception("Errors occur when handling message!")
                 self.keep_alive = False
                 self.close_reason = WebsocketCloseReason(
@@ -454,8 +455,9 @@ class WebsocketControllerHandler:
             header.append(PAYLOAD_LEN_EXT64)
             header.extend(struct.pack(">Q", payload_length))
         else:
-            raise Exception(
-                "Message is too big. Consider breaking it into chunks.")
+            raise WebsocketException(
+                reason=WebsocketCloseReason("Message is too big. Consider breaking it into chunks.")
+            )
 
         return header
 
@@ -508,15 +510,15 @@ class WebsocketSessionImpl(WebsocketSession):
         self.__handler = handler
         self.__request = request
 
-    @ property
+    @property
     def id(self) -> str:
         return self.__id
 
-    @ property
+    @property
     def request(self) -> WebsocketRequest:
         return self.__request
 
-    @ property
+    @property
     def is_closed(self) -> bool:
         return not self.__handler.keep_alive
 

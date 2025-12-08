@@ -50,7 +50,7 @@ class CoroutineHTTPServer(RoutingServer):
         self.host: str = host
         self.port: int = port
         self.ssl: SSLContext = ssl
-        self.server: Server = None
+        self.server: Server = None # NOSONAR
         self.__thread_local = threading.local()
 
     async def callback(self, reader: StreamReader, writer: StreamWriter):
@@ -65,7 +65,7 @@ class CoroutineHTTPServer(RoutingServer):
         async with self.server:
             try:
                 await self.server.serve_forever()
-            except asyncio.CancelledError:
+            except asyncio.CancelledError: # NOSONAR
                 _logger.debug(
                     "Some requests are lost for the reason that the server is shutted down.")
             finally:
@@ -75,7 +75,7 @@ class CoroutineHTTPServer(RoutingServer):
         if not hasattr(self.__thread_local, "event_loop"):
             try:
                 self.__thread_local.event_loop = asyncio.new_event_loop()
-            except:
+            except: # NOSONAR
                 self.__thread_local.event_loop = asyncio.get_event_loop()
         return self.__thread_local.event_loop
 

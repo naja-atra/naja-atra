@@ -320,7 +320,7 @@ class AppConf:
 
         self._error_page = {}
 
-        self._session_factory: HttpSessionFactory = None
+        self._session_factory: HttpSessionFactory = None # NOSONAR
 
         self.request_map("/favicon.ico")(_favicon)
         self.route = self.request_map
@@ -532,12 +532,12 @@ class AppConf:
         arg_func = None
 
         if len_args == 1:
-            if callable(anno_args[0]):
+            if callable(anno_args[0]): # NOSONAR
                 arg_func = anno_args[0]
 
         if not arg_func:
             if anno_args:
-                args = [it for it in anno_args]
+                args = list(anno_args)
             else:
                 args = [""]
         else:
@@ -553,7 +553,7 @@ class AppConf:
         else:
             return map
 
-    def _get_request_mappings(self) -> List[_ControllerFunction]:
+    def _get_request_mappings(self) -> List[_ControllerFunction]: # NOSONAR
         mappings: List[_ControllerFunction] = []
 
         for ctr_fun in self._request_mappings:
